@@ -3,7 +3,7 @@ import  torchvision.transforms as transforms
 from    PIL import Image
 import  os.path
 import  numpy as np
-
+import pdb
 
 class OmniglotNShot:
 
@@ -41,7 +41,7 @@ class OmniglotNShot:
                 self.x.append(np.array(imgs))
 
             # as different class may have different number of imgs
-            self.x = np.array(self.x).astype(np.float)  # [[20 imgs],..., 1623 classes in total]
+            self.x = np.array(self.x).astype(np.float32)  # [[20 imgs],..., 1623 classes in total]
             # each character contains 20 imgs
             print('data shape:', self.x.shape)  # [1623, 20, 84, 84, 1]
             temp = []  # Free memory
@@ -55,6 +55,7 @@ class OmniglotNShot:
 
         # [1623, 20, 84, 84, 1]
         # TODO: can not shuffle here, we must keep training and test set distinct!
+        # pdb.set_trace()
         self.x_train, self.x_test = self.x[:1200], self.x[1200:]
 
         # self.normalization()
@@ -140,10 +141,10 @@ class OmniglotNShot:
 
             # [b, setsz, 1, 84, 84]
             x_spts = np.array(x_spts).astype(np.float32).reshape(self.batchsz, setsz, 1, self.resize, self.resize)
-            y_spts = np.array(y_spts).astype(np.int).reshape(self.batchsz, setsz)
+            y_spts = np.array(y_spts).astype(np.int32).reshape(self.batchsz, setsz)
             # [b, qrysz, 1, 84, 84]
             x_qrys = np.array(x_qrys).astype(np.float32).reshape(self.batchsz, querysz, 1, self.resize, self.resize)
-            y_qrys = np.array(y_qrys).astype(np.int).reshape(self.batchsz, querysz)
+            y_qrys = np.array(y_qrys).astype(np.int32).reshape(self.batchsz, querysz)
 
             data_cache.append([x_spts, y_spts, x_qrys, y_qrys])
 

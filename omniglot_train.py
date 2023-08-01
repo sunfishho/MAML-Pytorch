@@ -1,3 +1,4 @@
+
 import  torch, os
 import  numpy as np
 from    omniglotNShot import OmniglotNShot
@@ -8,7 +9,7 @@ from    meta import Meta
 def main(args):
 
     torch.manual_seed(222)
-    torch.cuda.manual_seed_all(222)
+    # torch.cuda.manual_seed_all(222)
     np.random.seed(222)
 
     print(args)
@@ -30,7 +31,7 @@ def main(args):
         ('linear', [args.n_way, 64])
     ]
 
-    device = torch.device('cuda')
+    device = torch.device('cpu')
     maml = Meta(args, config).to(device)
 
     tmp = filter(lambda x: x.requires_grad, maml.parameters())
@@ -44,8 +45,13 @@ def main(args):
                        k_shot=args.k_spt,
                        k_query=args.k_qry,
                        imgsz=args.imgsz)
+    
+    train_accs_list = []
+    val_accs_list = []
+    test_accs_list = []
 
-    for step in range(args.epoch):
+    # for step in range(args.epoch):
+    for step in range(1001):
 
         x_spt, y_spt, x_qry, y_qry = db_train.next()
         x_spt, y_spt, x_qry, y_qry = torch.from_numpy(x_spt).to(device), torch.from_numpy(y_spt).to(device), \
@@ -53,13 +59,16 @@ def main(args):
 
         # set traning=True to update running_mean, running_variance, bn_weights, bn_bias
         accs = maml(x_spt, y_spt, x_qry, y_qry)
+        val_accs_list.append(accs[-1])
 
         if step % 50 == 0:
             print('step:', step, '\ttraining acc:', accs)
+            print(f"val_accs: {val_accs_list}")
+            torch.save(maml, "omniglot_maml.pth")
 
         if step % 500 == 0:
             accs = []
-            for _ in range(1000//args.task_num):
+            for _ in range( 1000//args.task_num):
                 # test
                 x_spt, y_spt, x_qry, y_qry = db_train.next('test')
                 x_spt, y_spt, x_qry, y_qry = torch.from_numpy(x_spt).to(device), torch.from_numpy(y_spt).to(device), \
@@ -72,7 +81,9 @@ def main(args):
 
             # [b, update_step+1]
             accs = np.array(accs).mean(axis=0).astype(np.float16)
+            test_accs_list.append(accs[-1])
             print('Test acc:', accs)
+            print(f"test_accs_list: {test_accs_list}")
 
 
 if __name__ == '__main__':
@@ -91,5 +102,5 @@ if __name__ == '__main__':
     argparser.add_argument('--update_step_test', type=int, help='update steps for finetunning', default=10)
 
     args = argparser.parse_args()
-
+    
     main(args)
