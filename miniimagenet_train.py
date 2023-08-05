@@ -62,7 +62,8 @@ def main():
                              k_query=args.k_qry,
                              batchsz=100, resize=args.imgsz)
 
-    for epoch in range(args.epoch//10000):
+    # for epoch in range(args.epoch//10000):
+    for epoch in range(2000):
         # fetch meta_batchsz num of episode each time
         db = DataLoader(mini, args.task_num, shuffle=True, num_workers=0, pin_memory=True)
 
@@ -74,6 +75,8 @@ def main():
 
             if step % 30 == 0:
                 print('step:', step, '\ttraining acc:', accs)
+                torch.save(maml, "miniimagenet_maml.pth")
+                
 
             if step % 500 == 0:  # evaluation
                 db_test = DataLoader(mini_test, 1, shuffle=True, num_workers=0, pin_memory=True)

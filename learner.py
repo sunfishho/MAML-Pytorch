@@ -77,9 +77,6 @@ class Learner(nn.Module):
 
 
 
-
-
-
     def extra_repr(self):
         info = ''
 
